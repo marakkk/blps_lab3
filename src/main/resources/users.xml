@@ -1,0 +1,20 @@
+<users>
+    <user>
+        <username>developer</username>
+        <password>password</password>
+        <roles>DEVELOPER</roles>
+        <authorities>APP_SUBMIT,APP_UPDATE,APP_DELETE,APP_PUBLISH,DEV_INFO,APP_INFO</authorities>
+    </user>
+    <user>
+        <username>user</username>
+        <password>user</password>
+        <roles>USER</roles>
+        <authorities>APP_DOWNLOAD,APP_USE,APP_PURCHASE,APP_CATALOG</authorities>
+    </user>
+    <user>
+        <username>admin</username>
+        <password>admin</password>
+        <roles>ADMIN</roles>
+        <authorities>APP_CREATE,APP_UPDATE,APP_DELETE,APP_DOWNLOAD,APP_USE,APP_MODERATE</authorities>
+    </user>
+</users>
