@@ -6,6 +6,7 @@ import com.blps.lab2.entities.googleplay.App;
 import com.blps.lab2.entities.payments.Payment;
 import com.blps.lab2.repo.googleplay.AppRepository;
 import com.blps.lab2.repo.payments.PaymentRepository;
+import jakarta.transaction.SystemException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,8 @@ public class AppService {
         try {
             userTransaction.begin();
 
-            App app = appRepository.findById(appId).orElseThrow();
+            App app = appRepository.findById(appId)
+                    .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
             double spentByUsers = paymentRepository.findByAppId(appId)
                     .stream()
@@ -44,8 +46,8 @@ public class AppService {
         } catch (Exception e) {
             try {
                 userTransaction.rollback();
-            } catch (Exception rollbackEx) {
-                rollbackEx.printStackTrace();
+            } catch (SystemException ex) {
+                throw new RuntimeException(ex);
             }
             throw new RuntimeException(e);
         }

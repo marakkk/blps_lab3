@@ -65,9 +65,9 @@ class DeveloperController {
 
 
     @PreAuthorize("hasRole('DEVELOPER') and hasAuthority('APP_INFO')")
-    @GetMapping("/{id}/app-info")
-    public ResponseEntity<AppDto> getAppInfo(@PathVariable Long id) {
-        AppDto app = appService.getAppInfo(id);
+    @GetMapping("/{appId}/app-info")
+    public ResponseEntity<AppDto> getAppInfo(@PathVariable Long appId) {
+        AppDto app = appService.getAppInfo(appId);
         return ResponseEntity.ok(app);
     }
 

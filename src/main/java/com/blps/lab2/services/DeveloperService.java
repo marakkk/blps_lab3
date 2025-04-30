@@ -133,8 +133,10 @@ public class DeveloperService {
         try {
             userTransaction.begin();
 
-            Developer developer = repository.findById(developerId).orElseThrow();
             App app = appRepository.findById(appId).orElseThrow();
+
+            Developer developer = repository.findById(developerId)
+                    .orElseThrow(() -> new IllegalArgumentException("Developer not found with ID: " + app.getDeveloper().getId()));
 
             if (!app.getDeveloper().equals(developer)) throw new IllegalStateException("Unauthorized");
             if (app.getStatus() != AppStatus.PENDING) throw new IllegalStateException("App must be pending");
