@@ -3,10 +3,12 @@ package com.blps.lab2.services;
 import com.atomikos.icatch.jta.TransactionManagerImp;
 import com.blps.lab2.dto.AppDto;
 import com.blps.lab2.entities.googleplay.App;
+import com.blps.lab2.entities.googleplay.Developer;
 import com.blps.lab2.entities.payments.Payment;
 import com.blps.lab2.enums.AppStatus;
 import com.blps.lab2.enums.PaymentStatus;
 import com.blps.lab2.repo.googleplay.AppRepository;
+import com.blps.lab2.repo.googleplay.DeveloperRepository;
 import com.blps.lab2.repo.payments.PaymentRepository;
 import jakarta.transaction.UserTransaction;
 import lombok.RequiredArgsConstructor;
@@ -23,42 +25,40 @@ public class AdminService {
 
     private final AppRepository appRepository;
     private final PaymentRepository paymentRepository;
+    private final DeveloperRepository developerRepository;
     private final UserTransaction userTransaction;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
-
-    private String getTransactionId() {
-        try {
-            var transaction = TransactionManagerImp.getTransactionManager().getTransaction();
-            return transaction != null ? transaction.toString() : "NO_ACTIVE_TRANSACTION";
-        } catch (Exception e) {
-            logger.warn("Failed to retrieve transaction ID.");
-            return "UNKNOWN";
-        }
-    }
-
 
     public App createApp(AppDto appDto) {
         try {
             userTransaction.begin();
 
-            String transactionId = getTransactionId();
-            logger.info("[TX:{}] Creating new app: {}", transactionId, appDto.getName());
+            logger.info("Creating new app: {}", appDto.getName());
 
-            App app = new App();
-            app.setName(appDto.getName());
-            app.setVersion(appDto.getVersion());
-            app.setStatus(AppStatus.PENDING);
-            app.setDownloads(0);
-            app.setRevenue(0);
-            app.setInAppPurchases(appDto.isInAppPurchases());
-            app.setNotFree(appDto.isNotFree());
-            app.setAppPrice(appDto.getAppPrice());
-            app.setMonetizationType(appDto.getMonetizationType());
+            Developer developer = developerRepository.findById(appDto.getDeveloperId())
+                    .orElseThrow(() -> new IllegalArgumentException("Developer not found with ID: " + appDto.getDeveloperId()));
+
+            App app = App.builder()
+                    .name(appDto.getName())
+                    .version(appDto.getVersion())
+                    .status(AppStatus.PENDING)
+                    .downloads(0)
+                    .revenue(0)
+                    .inAppPurchases(appDto.isInAppPurchases())
+                    .isNotFree(appDto.isNotFree())
+                    .appPrice(appDto.getAppPrice())
+                    .monetizationType(appDto.getMonetizationType())
+                    .correctPermissions(appDto.isCorrectPermissions())
+                    .correctMetadata(appDto.isCorrectMetaData())
+                    .isViolatesGooglePlayPolicies(appDto.isViolatesGooglePlayPolicies())
+                    .isChildrenBadPolicy(appDto.isChildrenBadPolicy())
+                    .developer(developer)
+                    .build();
 
             app = appRepository.save(app);
             userTransaction.commit();
 
-            logger.info("[TX:{}] App created successfully with ID: {}", transactionId, app.getId());
+            logger.info("App created successfully with ID: {}", app.getId());
             return app;
         } catch (Exception e) {
             rollbackTransaction();
@@ -70,23 +70,28 @@ public class AdminService {
         try {
             userTransaction.begin();
 
-            String transactionId = getTransactionId();
-            logger.info("[TX:{}] Updating app with ID: {}", transactionId, appId);
+            logger.info("Updating app with ID: {}", appId);
 
             App app = appRepository.findById(appId)
                     .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
-            app.setName(appDto.getName());
-            app.setVersion(appDto.getVersion());
-            app.setInAppPurchases(appDto.isInAppPurchases());
-            app.setNotFree(appDto.isNotFree());
-            app.setAppPrice(appDto.getAppPrice());
-            app.setMonetizationType(appDto.getMonetizationType());
+            Developer developer = developerRepository.findById(appDto.getDeveloperId())
+                    .orElseThrow(() -> new IllegalArgumentException("Developer not found with ID: " + appDto.getDeveloperId()));
+
+            app = app.toBuilder()
+                    .name(appDto.getName())
+                    .version(appDto.getVersion())
+                    .inAppPurchases(appDto.isInAppPurchases())
+                    .isNotFree(appDto.isNotFree())
+                    .appPrice(appDto.getAppPrice())
+                    .monetizationType(appDto.getMonetizationType())
+                    .developer(developer)
+                    .build();
 
             app = appRepository.save(app);
             userTransaction.commit();
 
-            logger.info("[TX:{}] App updated successfully: {}", transactionId, app);
+            logger.info("App updated successfully: {}", app);
             return app;
         } catch (Exception e) {
             rollbackTransaction();
@@ -98,8 +103,7 @@ public class AdminService {
         try {
 
             userTransaction.begin();
-            String transactionId = getTransactionId();
-            logger.info("[TX:{}] Attempting to delete app with ID: {}", transactionId, appId);
+            logger.info("Attempting to delete app with ID: {}", appId);
 
             if (!appRepository.existsById(appId)) {
                 throw new IllegalArgumentException("App with ID " + appId + " not found. Cannot delete.");
@@ -108,7 +112,7 @@ public class AdminService {
             appRepository.deleteById(appId);
             userTransaction.commit();
 
-            logger.info("[TX:{}] App deleted successfully.", transactionId);
+            logger.info("App deleted successfully.");
         } catch (Exception e) {
             rollbackTransaction();
             throw new RuntimeException("Failed to delete app: " + e.getMessage(), e);
@@ -118,21 +122,18 @@ public class AdminService {
     public Payment createPayment(Long appId, double amount) {
         try {
             userTransaction.begin();
-            String transactionId = getTransactionId();
-            logger.info("[TX:{}] Creating payment for App ID: {}", transactionId, appId);
+            logger.info("Creating payment for App ID: {}", appId);
 
-            App app = appRepository.findById(appId)
-                    .orElseThrow(() -> new IllegalArgumentException("App not found"));
-
-            Payment payment = new Payment();
-            payment.setAppId(appId);
-            payment.setAmount(amount);
-            payment.setStatus(PaymentStatus.SUCCESS);
+            Payment payment = Payment.builder()
+                    .appId(appId)
+                    .amount(amount)
+                    .status(PaymentStatus.SUCCESS)
+                    .build();
 
             paymentRepository.save(payment);
             userTransaction.commit();
 
-            logger.info("[TX:{}] Payment created successfully: {}", transactionId, payment);
+            logger.info("Payment created successfully: {}", payment);
             return payment;
         } catch (Exception e) {
             rollbackTransaction();
@@ -143,13 +144,13 @@ public class AdminService {
     public Map<String, String> moderateApp(Long appId, boolean approved, String moderatorComment) {
         try {
             userTransaction.begin();
-            String transactionId = getTransactionId();
-            logger.info("[TX:{}] Moderating app ID: {} | Approved: {}", transactionId, appId, approved);
+            logger.info("Moderating app ID: {} | Approved: {}", appId, approved);
 
             App app = appRepository.findById(appId)
                     .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
             Map<String, String> response = new HashMap<>();
+
             if (approved) {
                 app.setStatus(AppStatus.APPROVED);
                 response.put("message", "App approved by moderator.");
@@ -161,7 +162,7 @@ public class AdminService {
             appRepository.save(app);
             userTransaction.commit();
 
-            logger.info("[TX:{}] App moderation complete: {}", transactionId, response);
+            logger.info("App moderation complete: {}", response);
             return response;
         } catch (Exception e) {
             rollbackTransaction();

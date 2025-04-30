@@ -75,7 +75,6 @@ public class PaymentService {
         userRepository.save(user);
 
         app.setRevenue(app.getRevenue() + amount);
-        app.getDeveloper().setEarnings(app.getDeveloper().getEarnings() + amount);
         appRepository.save(app);
 
         payment.setDeveloperId(app.getDeveloper().getId());

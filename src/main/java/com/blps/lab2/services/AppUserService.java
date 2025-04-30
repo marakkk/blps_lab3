@@ -26,18 +26,18 @@ public class AppUserService {
 
     public List<AppDto> viewAppCatalog() {
         return appRepository.findAll().stream()
-                .map(app -> new AppDto(
-                        app.getId(),
-                        app.getName(),
-                        app.getVersion(),
-                        app.getStatus(),
-                        app.getDownloads(),
-                        app.getRevenue(),
-                        app.isInAppPurchases(),
-                        app.isNotFree(),
-                        app.getAppPrice(),
-                        app.getMonetizationType()
-                ))
+                .map(app -> AppDto.builder()
+                        .id(app.getId())
+                        .name(app.getName())
+                        .version(app.getVersion())
+                        .status(app.getStatus())
+                        .downloads(app.getDownloads())
+                        .revenue(app.getRevenue())
+                        .inAppPurchases(app.isInAppPurchases())
+                        .isNotFree(app.isNotFree())
+                        .appPrice(app.getAppPrice())
+                        .monetizationType(app.getMonetizationType())
+                        .build())
                 .collect(Collectors.toList());
     }
 

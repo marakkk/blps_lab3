@@ -40,11 +40,12 @@ public class DeveloperService {
     }
 
     private Payment createPaymentForAppSubmission(Long developerId, Long appId, MonetizationType monetizationType) {
-        Payment payment = new Payment();
-        payment.setAmount(PUBLISHING_FEE);
-        payment.setMonetizationType(monetizationType);
-        payment.setDeveloperId(developerId);
-        payment.setAppId(appId);
+        Payment payment = Payment.builder()
+                .amount(PUBLISHING_FEE)
+                .monetizationType(monetizationType)
+                .developerId(developerId)
+                .appId(appId)
+                .build();
         paymentRepository.save(payment);
         return payment;
     }
@@ -172,26 +173,28 @@ public class DeveloperService {
     public DeveloperDto getDeveloperInfo(Long developerId) {
         Developer developer = repository.findById(developerId)
                 .orElseThrow(() -> new RuntimeException("Developer not found"));
-        return new DeveloperDto(
-                developer.getId(),
-                developer.getUsername(),
-                developer.getEmail(),
-                developer.isPaymentProfile(),
-                developer.getAccStatus(),
-                developer.getEarnings(),
-                developer.getApps().stream().map(app -> new AppDto(
-                        app.getId(),
-                        app.getName(),
-                        app.getVersion(),
-                        app.getStatus(),
-                        app.getDownloads(),
-                        app.getRevenue(),
-                        app.isInAppPurchases(),
-                        app.isNotFree(),
-                        app.getAppPrice(),
-                        app.getMonetizationType()
-                )).collect(Collectors.toList())
-        );
+        return DeveloperDto.builder()
+                .id(developer.getId())
+                .name(developer.getUsername())
+                .email(developer.getEmail())
+                .paymentProfile(developer.isPaymentProfile())
+                .accStatus(developer.getAccStatus())
+                .earnings(developer.getEarnings())
+                .apps(developer.getApps().stream()
+                        .map(app -> AppDto.builder()
+                                .id(app.getId())
+                                .name(app.getName())
+                                .version(app.getVersion())
+                                .status(app.getStatus())
+                                .downloads(app.getDownloads())
+                                .revenue(app.getRevenue())
+                                .inAppPurchases(app.isInAppPurchases())
+                                .isNotFree(app.isNotFree())
+                                .appPrice(app.getAppPrice())
+                                .monetizationType(app.getMonetizationType())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
 }
 

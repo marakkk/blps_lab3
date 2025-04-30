@@ -5,11 +5,17 @@ import com.blps.lab2.entities.googleplay.Developer;
 import com.blps.lab2.enums.MonetizationType;
 import com.blps.lab2.enums.PaymentStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @Entity
 @Table(name = "payments")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

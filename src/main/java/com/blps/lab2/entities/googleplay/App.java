@@ -3,11 +3,17 @@ package com.blps.lab2.entities.googleplay;
 import com.blps.lab2.enums.AppStatus;
 import com.blps.lab2.enums.MonetizationType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder(toBuilder = true)
 @Entity
 @Table(name = "app")
+@NoArgsConstructor
+@AllArgsConstructor
 public class App {
 
     @Id

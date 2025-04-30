@@ -56,18 +56,18 @@ public class AppService {
         App app = appRepository.findById(appId)
                 .orElseThrow(() -> new RuntimeException("App not found"));
 
-        return new AppDto(
-                app.getId(),
-                app.getName(),
-                app.getVersion(),
-                app.getStatus(),
-                app.getDownloads(),
-                app.getRevenue(),
-                app.isInAppPurchases(),
-                app.isNotFree(),
-                app.getAppPrice(),
-                app.getMonetizationType()
-        );
+        return AppDto.builder()
+                .id(app.getId())
+                .name(app.getName())
+                .version(app.getVersion())
+                .status(app.getStatus())
+                .downloads(app.getDownloads())
+                .revenue(app.getRevenue())
+                .inAppPurchases(app.isInAppPurchases())
+                .isNotFree(app.isNotFree())
+                .appPrice(app.getAppPrice())
+                .monetizationType(app.getMonetizationType())
+                .build();
     }
 
 }

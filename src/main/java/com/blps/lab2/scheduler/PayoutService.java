@@ -17,7 +17,6 @@ public class PayoutService {
     private final AppRepository appRepository;
     private static final Logger logger = LoggerFactory.getLogger(PayoutService.class);
 
-
     @Transactional
     public void processDeveloperPayouts() {
         List<App> apps = appRepository.findAll();
@@ -29,7 +28,15 @@ public class PayoutService {
     }
 
     private double calculateEarnings(App app) {
-        // нужно тут довести до ума логику
-        return 10.0;
+        if (app.isNotFree()) {
+            logger.info("App is not free so some money is added to developer {} from app {}", app.getDeveloper().getUsername(), app.getName());
+            return app.getAppPrice() * app.getDownloads();
+        } else if (app.isInAppPurchases()) {
+            logger.info("App is free so revenue {} added to developer {} from app {}", app.getRevenue(), app.getDeveloper().getUsername(), app.getName());
+            return app.getRevenue();
+        } else {
+            logger.info("Nothing is added to developer {} from app {}", app.getDeveloper().getUsername(), app.getName());
+            return 0.0;
+        }
     }
 }

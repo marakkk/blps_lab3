@@ -2,14 +2,20 @@ package com.blps.lab2.entities.googleplay;
 
 import com.blps.lab2.enums.DevAccount;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Objects;
 
 @Data
+@Builder
 @Entity
 @Table(name = "developer")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Developer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
