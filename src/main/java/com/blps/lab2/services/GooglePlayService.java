@@ -16,6 +16,8 @@ public class GooglePlayService {
 
     private final AppRepository appRepository;
     private final Random random = new Random();
+    private final JiraService jiraService;
+
 
     public Map<String, String> autoReviewApp(App app) {
 
@@ -48,6 +50,7 @@ public class GooglePlayService {
 
         if (random.nextDouble() < manualReviewChance) {
             app.setStatus(AppStatus.UNDER_REVIEW);
+
             response.put("message", "App requires manual review.");
         } else {
             app.setStatus(AppStatus.APPROVED);
@@ -64,14 +67,19 @@ public class GooglePlayService {
             throw new IllegalStateException("App must be in UNDER_REVIEW status for manual review.");
         }
 
+        String issueId = jiraService.createManualReviewTask(app.getName(), app.getId());
+
         Map<String, String> response = new HashMap<>();
         if (approved) {
             app.setStatus(AppStatus.APPROVED);
+            jiraService.updateTaskStatus(issueId, "Готово");
             response.put("message", "App approved by moderator.");
         } else {
             app.setStatus(AppStatus.REJECTED);
+            jiraService.updateTaskStatus(issueId, "rejected");
             response.put("reason", moderatorComment);
         }
+
 
         appRepository.save(app);
         return response;
@@ -82,7 +90,6 @@ public class GooglePlayService {
         if (app.getStatus() != AppStatus.APPROVED) {
             throw new IllegalStateException("App must be approved before publishing.");
         }
-
         app.setStatus(AppStatus.PUBLISHED);
         appRepository.save(app);
     }

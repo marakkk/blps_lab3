@@ -23,7 +23,6 @@ public class AppUserService {
     private final PaymentService paymentService;
     private final UserTransactionManager userTransaction;
 
-
     public List<AppDto> viewAppCatalog() {
         return appRepository.findAll().stream()
                 .map(app -> AppDto.builder()
