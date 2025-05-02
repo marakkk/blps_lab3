@@ -33,6 +33,7 @@ public class DeveloperService {
     private final PaymentRepository paymentRepository;
     private final GooglePlayService googlePlayService;
     private final UserTransactionManager userTransaction;
+    private final JiraService jiraService;
 
 
     private boolean isValidVersion(double version) {
@@ -142,6 +143,7 @@ public class DeveloperService {
             if (app.getStatus() != AppStatus.PENDING) throw new IllegalStateException("App must be pending");
 
             Map<String, String> reviewResult = googlePlayService.autoReviewApp(app);
+
             if ("App approved automatically.".equals(reviewResult.get("message"))) {
                 googlePlayService.publishApp(app);
                 userTransaction.commit();

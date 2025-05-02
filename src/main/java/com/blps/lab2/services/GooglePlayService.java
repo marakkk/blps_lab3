@@ -4,6 +4,7 @@ import com.blps.lab2.entities.googleplay.App;
 import com.blps.lab2.enums.AppStatus;
 import com.blps.lab2.repo.googleplay.AppRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -18,6 +19,11 @@ public class GooglePlayService {
     private final Random random = new Random();
     private final JiraService jiraService;
 
+    @Value("${jira.assignee}")
+    private String assignee;
+
+    @Value("${jira.assignee_pass}")
+    private String assigneePass;
 
     public Map<String, String> autoReviewApp(App app) {
 
@@ -68,15 +74,16 @@ public class GooglePlayService {
         }
 
         String issueId = jiraService.createManualReviewTask(app.getName(), app.getId());
+        jiraService.updateTaskStatus(issueId, "In Progress", assignee, assigneePass);
 
         Map<String, String> response = new HashMap<>();
         if (approved) {
             app.setStatus(AppStatus.APPROVED);
-            jiraService.updateTaskStatus(issueId, "Готово");
+            jiraService.updateTaskStatus(issueId, "Done", assignee, assigneePass);
             response.put("message", "App approved by moderator.");
         } else {
             app.setStatus(AppStatus.REJECTED);
-            jiraService.updateTaskStatus(issueId, "rejected");
+            jiraService.updateTaskStatus(issueId, "Rejected", assignee, assigneePass);
             response.put("reason", moderatorComment);
         }
 
