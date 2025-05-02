@@ -18,6 +18,7 @@ public class GooglePlayService {
     private final AppRepository appRepository;
     private final Random random = new Random();
     private final JiraService jiraService;
+    private final MailNotificationService mailNotificationService;
 
     @Value("${jira.assignee}")
     private String assignee;
@@ -75,6 +76,8 @@ public class GooglePlayService {
 
         String issueId = jiraService.createManualReviewTask(app.getName(), app.getId());
         jiraService.updateTaskStatus(issueId, "In Progress", assignee, assigneePass);
+
+        mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), issueId);
 
         Map<String, String> response = new HashMap<>();
         if (approved) {
