@@ -1,6 +1,5 @@
 package com.blps.lab2.services;
 
-import com.blps.lab2.async.PaymentMessage;
 import com.blps.lab2.entities.googleplay.App;
 import com.blps.lab2.entities.googleplay.AppUser;
 import com.blps.lab2.entities.payments.Payment;

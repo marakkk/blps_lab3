@@ -1,7 +1,6 @@
 package com.blps.lab2.services;
 
 import com.atomikos.icatch.jta.UserTransactionManager;
-import com.blps.lab2.async.PaymentMessage;
 import com.blps.lab2.dto.AppDto;
 import com.blps.lab2.entities.googleplay.App;
 import com.blps.lab2.entities.googleplay.AppUser;
@@ -9,9 +8,7 @@ import com.blps.lab2.entities.payments.Payment;
 import com.blps.lab2.enums.PaymentStatus;
 import com.blps.lab2.repo.googleplay.AppRepository;
 import com.blps.lab2.repo.googleplay.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
