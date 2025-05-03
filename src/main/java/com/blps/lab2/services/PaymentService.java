@@ -52,6 +52,9 @@ public class PaymentService {
         Payment payment = processPayment(user, app, app.getAppPrice(), MonetizationType.IN_APP_PURCHASES);
         return payment;
     }
+    public boolean hasSuccessfulPayment(Long userId, Long appId) {
+        return paymentRepository.existsByAppIdAndUserIdAndStatus(appId, userId, PaymentStatus.SUCCESS);
+    }
 
     private Payment processPayment(AppUser user, App app, double amount, MonetizationType type) {
         Payment payment = new Payment();
