@@ -25,7 +25,7 @@ public class AppUserService {
     private final AppRepository appRepository;
     private final PaymentService paymentService;
     private final UserTransactionManager userTransaction;
-    private final JmsTemplate jmsTemplate;
+
 
 
     public List<AppDto> viewAppCatalog() {
@@ -53,14 +53,18 @@ public class AppUserService {
                 .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
         if (app.isNotFree()) {
-            // Check if payment exists and was successful
             boolean hasSuccessfulPayment = paymentService.hasSuccessfulPayment(userId, appId);
             if (!hasSuccessfulPayment) {
                 throw new IllegalArgumentException("Payment required before downloading this app");
             }
         }
 
-        return "User " + user.getUsername() + " successfully downloaded " + app.getName() + ".";
+
+        app.setDownloads(app.getDownloads() + 1);
+        appRepository.save(app);
+
+        return "User " + user.getUsername() + " successfully downloaded " + app.getName() +
+                ". Total downloads: " + app.getDownloads();
     }
 
 
@@ -100,35 +104,21 @@ public class AppUserService {
     }
 
 
-    public String initiatePaidAppPurchase(Long userId, Long appId) {
-        App app = appRepository.findById(appId)
-                .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
-        if (!app.isNotFree()) {
-            throw new IllegalArgumentException("This app is free");
-        }
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        jmsTemplate.convertAndSend("app.payment.queue", new PaymentMessage(userId, appId));
-
-        return "Payment process started for app: " + app.getName();
-    }
-
-    @Transactional
     public String completePaidAppDownload(Long userId, Long appId) {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         App app = appRepository.findById(appId)
                 .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
-        // Verify payment was successful
-        boolean hasSuccessfulPayment = paymentService.hasSuccessfulPayment(userId, appId);
-        if (!hasSuccessfulPayment) {
+        if (!paymentService.hasSuccessfulPayment(userId, appId)) {
             throw new IllegalStateException("Payment verification failed");
         }
 
-        return "User " + user.getUsername() + " successfully downloaded paid app: " + app.getName();
+        app.setDownloads(app.getDownloads() + 1);
+        appRepository.save(app);
+
+        return "Download completed. Total downloads: " + app.getDownloads();
     }
 }

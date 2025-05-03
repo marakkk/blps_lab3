@@ -1,5 +1,6 @@
 package com.blps.lab2.services;
 
+import com.blps.lab2.async.PaymentMessage;
 import com.blps.lab2.entities.googleplay.App;
 import com.blps.lab2.entities.googleplay.AppUser;
 import com.blps.lab2.entities.payments.Payment;
@@ -11,6 +12,7 @@ import com.blps.lab2.repo.googleplay.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Random;
@@ -21,6 +23,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final AppRepository appRepository;
     private final UserRepository userRepository;
+    private final JmsTemplate jmsTemplate;
     private final Random random = new Random();
 
 
@@ -88,6 +91,22 @@ public class PaymentService {
         payment.setStatus(PaymentStatus.SUCCESS);
 
         return paymentRepository.save(payment);
+    }
+
+    public String initiatePaidAppPurchase(Long userId, Long appId) {
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "App not found"));
+
+        if (!app.isNotFree()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This app is free");
+        }
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        jmsTemplate.convertAndSend("app.payment.queue", new PaymentMessage(userId, appId));
+
+        return "Payment process started for app: " + app.getName();
     }
 
 }

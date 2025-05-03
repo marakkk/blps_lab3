@@ -15,11 +15,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PaymentProcessingService {
     private final PaymentService paymentService;
-    private final AppUserService appUserService;
     private final JmsTemplate jmsTemplate;
 
     @JmsListener(destination = "app.payment.queue")
-    @Transactional
     public void processPayment(PaymentMessage message) {
         try {
             Payment payment = paymentService.payForApp(message.getUserId(), message.getAppId());
@@ -33,3 +31,4 @@ public class PaymentProcessingService {
         }
     }
 }
+

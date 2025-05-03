@@ -45,7 +45,7 @@ public class AppUserController {
     @PreAuthorize("hasRole('USER') and hasAuthority('APP_PURCHASE')")
     @PostMapping("/{userId}/purchase/{appId}")
     public ResponseEntity<String> initiatePaidAppPurchase(@PathVariable Long userId, @PathVariable Long appId) {
-        String result = appUserService.initiatePaidAppPurchase(userId, appId);
+        String result = paymentService.initiatePaidAppPurchase(userId, appId);
         return ResponseEntity.accepted().body(result); // 202 Accepted for async
     }
 }
