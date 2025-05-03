@@ -33,7 +33,6 @@ public class DeveloperService {
     private final PaymentRepository paymentRepository;
     private final GooglePlayService googlePlayService;
     private final UserTransactionManager userTransaction;
-    private final JiraService jiraService;
 
 
     private boolean isValidVersion(double version) {
