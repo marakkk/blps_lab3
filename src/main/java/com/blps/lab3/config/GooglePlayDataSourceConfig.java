@@ -45,7 +45,7 @@ public class GooglePlayDataSourceConfig {
     ) {
         return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), Collections.emptyMap(), null)
                 .dataSource(dataSource)
-                .packages("com.blps.lab2.entities.googleplay")
+                .packages("com.blps.lab3.entities.googleplay")
                 .persistenceUnit("googleplay")
                 .properties(hibernateProperties())
                 .jta(true)

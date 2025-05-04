@@ -2,41 +2,27 @@ package com.blps.lab3.resourceAdapter;
 
 import jakarta.resource.ResourceException;
 import jakarta.resource.cci.*;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.*;
 
-public class JiraConnection implements Connection {
+@AllArgsConstructor
+public class JiraConnection implements Connection, AutoCloseable {
 
-    @Getter
-    private boolean closed = false;
+    private final RestTemplate restTemplate;
+    private final HttpHeaders authHeaders;
+    private final String jiraUrl;
+    private final String jiraProjectKey;
+    private final String defaultAssignee;
 
-    @Value("${jira.url}")
-    private String jiraUrl;
-
-    @Value("${jira.username}")
-    private String jiraUsername;
-
-    @Value("${jira.token}")
-    private String jiraApiToken;
-
-    @Value("${jira.projectKey}")
-    private String jiraProjectKey;
-
-    @Value("${jira.assignee}")
-    private String defaultAssignee;
-
-    private final RestTemplate restTemplate = new RestTemplate();
     private static final Logger logger = LoggerFactory.getLogger(JiraConnection.class);
 
     @Override
     public Interaction createInteraction() throws ResourceException {
-        return null;
+        return new JiraInteraction(this, restTemplate, authHeaders);
     }
 
     @Override
@@ -55,17 +41,11 @@ public class JiraConnection implements Connection {
     }
 
     @Override
-    public void close() {
-        closed = true;
+    public void close() throws ResourceException {
     }
 
     public String createManualReviewTask(String appName, Long appId) {
         String endpoint = jiraUrl + "/rest/api/2/issue";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        String auth = jiraUsername + ":" + jiraApiToken;
-        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString(auth.getBytes()));
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("project", Map.of("key", jiraProjectKey));
@@ -74,47 +54,63 @@ public class JiraConnection implements Connection {
         fields.put("issuetype", Map.of("name", "Task"));
         fields.put("assignee", Map.of("name", defaultAssignee));
 
-        Map<String, Object> payload = Map.of("fields", fields);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(
+                Map.of("fields", fields),
+                authHeaders
+        );
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(endpoint, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    endpoint,
+                    request,
+                    String.class
+            );
             logger.info("Response: {}", response.getBody());
             return extractIssueIdFromResponse(response.getBody());
         } catch (Exception e) {
-            logger.info("Error: {}", e.getMessage());
+            logger.error("Failed to create Jira issue", e);
             throw new RuntimeException("Failed to create Jira issue: " + e.getMessage(), e);
         }
-
     }
 
-    private HttpHeaders createAuthHeaders(String username, String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        String auth = username + ":" + token;
-        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString(auth.getBytes()));
-        return headers;
-    }
-
-
-    public void updateTaskStatus(String issueId, String status, String username, String token) {
-        String transitionId = getTransitionIdForStatus(issueId, status, username, token);
+    public void updateTaskStatus(String issueId, String status) {
+        String transitionId = getTransitionIdForStatus(issueId, status);
         if (transitionId == null) {
             throw new RuntimeException("No transition found for status: " + status);
         }
 
         String endpoint = jiraUrl + "/rest/api/2/issue/" + issueId + "/transitions";
-
-        HttpHeaders headers = createAuthHeaders(username, token);
-
-        Map<String, Object> payload = Map.of("transition", Map.of("id", transitionId));
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(
+                Map.of("transition", Map.of("id", transitionId)),
+                authHeaders
+        );
 
         try {
             restTemplate.exchange(endpoint, HttpMethod.POST, request, String.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update Jira issue status: " + e.getMessage(), e);
+        }
+    }
+
+    private String getTransitionIdForStatus(String issueId, String status) {
+        List<Map<String, Object>> transitions = getTransitionsForIssue(issueId);
+        return findTransitionIdByStatus(transitions, status);
+    }
+
+    private List<Map<String, Object>> getTransitionsForIssue(String issueId) {
+        String endpoint = jiraUrl + "/rest/api/2/issue/" + issueId + "/transitions";
+        HttpEntity<String> request = new HttpEntity<>(authHeaders);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    endpoint,
+                    HttpMethod.GET,
+                    request,
+                    String.class
+            );
+            return parseTransitionsResponse(response.getBody());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get transitions for issue", e);
         }
     }
 
@@ -161,25 +157,6 @@ public class JiraConnection implements Connection {
         return extractJsonFieldValue(response, "id");
     }
 
-    private List<Map<String, Object>> getTransitionsForIssue(String issueId, String username, String token) {
-        String endpoint = jiraUrl + "/rest/api/2/issue/" + issueId + "/transitions";
-
-        HttpHeaders headers = createAuthHeaders(username, token);
-        HttpEntity<String> request = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, request, String.class);
-            logger.info("Transitions response: {}", response.getBody());
-            return parseTransitionsResponse(Objects.requireNonNull(response.getBody()));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get transitions for issue: " + e.getMessage(), e);
-        }
-    }
-
-    private String getTransitionIdForStatus(String issueId, String status, String username, String token) {
-        List<Map<String, Object>> transitions = getTransitionsForIssue(issueId, username, token);
-        return findTransitionIdByStatus(transitions, status);
-    }
 
     private String findTransitionIdByStatus(List<Map<String, Object>> transitions, String status) {
         for (Map<String, Object> transition : transitions) {
@@ -191,5 +168,4 @@ public class JiraConnection implements Connection {
         }
         return null;
     }
-
 }

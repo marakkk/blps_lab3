@@ -3,7 +3,11 @@ package com.blps.lab3.services;
 import com.blps.lab3.entities.googleplay.App;
 import com.blps.lab3.enums.AppStatus;
 import com.blps.lab3.repo.googleplay.AppRepository;
+import com.blps.lab3.resourceAdapter.JiraConnection;
+import jakarta.resource.ResourceException;
+import jakarta.resource.cci.ConnectionFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +21,10 @@ public class GooglePlayService {
 
     private final AppRepository appRepository;
     private final Random random = new Random();
-    private final JiraService jiraService;
+
+    @Autowired
+    private ConnectionFactory jiraConnectionFactory;
+
     private final MailNotificationService mailNotificationService;
 
     @Value("${jira.assignee}")
@@ -74,26 +81,28 @@ public class GooglePlayService {
             throw new IllegalStateException("App must be in UNDER_REVIEW status for manual review.");
         }
 
-        String issueId = jiraService.createManualReviewTask(app.getName(), app.getId());
-        jiraService.updateTaskStatus(issueId, "In Progress", assignee, assigneePass);
+        try (JiraConnection jiraConnection = (JiraConnection) jiraConnectionFactory.getConnection()) {
+            String issueId = jiraConnection.createManualReviewTask(app.getName(), app.getId());
+            jiraConnection.updateTaskStatus(issueId, "In Progress");
 
-        mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), issueId);
+            mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), issueId);
 
-        Map<String, String> response = new HashMap<>();
-        if (approved) {
-            app.setStatus(AppStatus.APPROVED);
-            jiraService.updateTaskStatus(issueId, "Done", assignee, assigneePass);
-            response.put("message", "App approved by moderator.");
-        } else {
-            app.setStatus(AppStatus.REJECTED);
-            jiraService.updateTaskStatus(issueId, "Rejected", assignee, assigneePass);
-            response.put("reason", moderatorComment);
+            Map<String, String> response = new HashMap<>();
+            if (approved) {
+                app.setStatus(AppStatus.APPROVED);
+                jiraConnection.updateTaskStatus(issueId, "Done");
+                response.put("message", "App approved by moderator.");
+            } else {
+                app.setStatus(AppStatus.REJECTED);
+                jiraConnection.updateTaskStatus(issueId, "Rejected");
+                response.put("reason", moderatorComment);
+            }
+
+            appRepository.save(app);
+            return response;
+        } catch (ResourceException e) {
+            throw new RuntimeException("Failed to connect to Jira via JCA", e);
         }
-
-
-        appRepository.save(app);
-        return response;
-
     }
 
     public void publishApp(App app) {

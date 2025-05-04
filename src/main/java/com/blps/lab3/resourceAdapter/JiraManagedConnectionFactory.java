@@ -5,7 +5,9 @@ import jakarta.resource.spi.ConnectionManager;
 import jakarta.resource.spi.ConnectionRequestInfo;
 import jakarta.resource.spi.ManagedConnection;
 import jakarta.resource.spi.ManagedConnectionFactory;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.security.auth.Subject;
@@ -14,11 +16,13 @@ import java.util.Set;
 
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class JiraManagedConnectionFactory implements ManagedConnectionFactory {
 
     private String jiraUrl;
-    private String username;
-    private String apiToken;
+    private String jiraUsername;
+    private String jiraApiToken;
     private String jiraProjectKey;
     private String defaultAssignee;
 
@@ -29,7 +33,7 @@ public class JiraManagedConnectionFactory implements ManagedConnectionFactory {
 
     @Override
     public Object createConnectionFactory() throws ResourceException {
-        return new JiraConnectionFactory();
+        return new JiraConnectionFactory(this);
     }
 
     @Override

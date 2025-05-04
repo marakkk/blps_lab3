@@ -45,7 +45,7 @@ public class PaymentDataSourceConfig {
     ) {
         return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), Collections.emptyMap(), null)
                 .dataSource(dataSource)
-                .packages("com.blps.lab2.entities.payments")
+                .packages("com.blps.lab3.entities.payments")
                 .persistenceUnit("payments")
                 .properties(hibernateProperties())
                 .jta(true)

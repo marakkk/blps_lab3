@@ -2,22 +2,33 @@ package com.blps.lab3.resourceAdapter;
 
 
 import jakarta.resource.ResourceException;
-import jakarta.resource.cci.ConnectionFactory;
-import jakarta.resource.cci.ConnectionSpec;
-import jakarta.resource.cci.RecordFactory;
-import jakarta.resource.cci.ResourceAdapterMetaData;
-
+import jakarta.resource.cci.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 import javax.naming.NamingException;
 import javax.naming.Reference;
+import java.util.Base64;
 
+@RequiredArgsConstructor
 public class JiraConnectionFactory implements ConnectionFactory {
+    private final JiraManagedConnectionFactory mcf;
+
     @Override
     public JiraConnection getConnection() {
-        return new JiraConnection();
+        RestTemplate restTemplate = createRestTemplate();
+        HttpHeaders authHeaders = createAuthHeaders();
+        return new JiraConnection(
+                restTemplate,
+                authHeaders,
+                mcf.getJiraUrl(),
+                mcf.getJiraProjectKey(),
+                mcf.getDefaultAssignee());
     }
 
     @Override
-    public JiraConnection getConnection(ConnectionSpec connectionSpec) throws ResourceException {
+    public Connection getConnection(ConnectionSpec connectionSpec) throws ResourceException {
         return getConnection();
     }
 
@@ -37,5 +48,18 @@ public class JiraConnectionFactory implements ConnectionFactory {
     @Override
     public Reference getReference() throws NamingException {
         return null;
+    }
+
+    private RestTemplate createRestTemplate() {
+        return new RestTemplate();
+    }
+
+    private HttpHeaders createAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String auth = mcf.getJiraUsername() + ":" + mcf.getJiraApiToken();
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+        headers.set("Authorization", "Basic " + encodedAuth);
+        return headers;
     }
 }
