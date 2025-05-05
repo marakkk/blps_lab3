@@ -1,13 +1,12 @@
 package com.blps.lab3.config;
 
+import com.blps.lab3.resourceAdapter.JiraConnectionFactory;
 import com.blps.lab3.resourceAdapter.JiraManagedConnectionFactory;
-import com.blps.lab3.resourceAdapter.JiraResourceAdapter;
+import jakarta.resource.ResourceException;
+import jakarta.resource.cci.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jca.support.LocalConnectionFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jca.support.ResourceAdapterFactoryBean;
-import org.springframework.jca.support.SimpleBootstrapContext;
 
 @Configuration
 public class JiraJcaConfig {
@@ -28,34 +27,14 @@ public class JiraJcaConfig {
     private String defaultAssignee;
 
     @Bean
-    public JiraManagedConnectionFactory jiraManagedConnectionFactory() {
+    public ConnectionFactory jiraManagedConnectionFactory() throws ResourceException {
         JiraManagedConnectionFactory mcf = new JiraManagedConnectionFactory();
         mcf.setJiraUrl(jiraUrl);
-        mcf.setUsername(jiraUsername);
-        mcf.setApiToken(jiraApiToken);
+        mcf.setJiraUsername(jiraUsername);
+        mcf.setJiraApiToken(jiraApiToken);
         mcf.setJiraProjectKey(jiraProjectKey);
         mcf.setDefaultAssignee(defaultAssignee);
-        return mcf;
-    }
-
-    @Bean
-    public LocalConnectionFactoryBean jiraConnectionFactory(JiraManagedConnectionFactory mcf) {
-        LocalConnectionFactoryBean factoryBean = new LocalConnectionFactoryBean();
-        factoryBean.setManagedConnectionFactory(mcf);
-        return factoryBean;
-    }
-
-    @Bean
-    public SimpleBootstrapContext simpleBootstrapContext() {
-        return new SimpleBootstrapContext(null);
-    }
-
-    @Bean
-    public ResourceAdapterFactoryBean jiraResourceAdapter(SimpleBootstrapContext bootstrapContext) {
-        ResourceAdapterFactoryBean bean = new ResourceAdapterFactoryBean();
-        bean.setResourceAdapter(new JiraResourceAdapter());
-        bean.setBootstrapContext(bootstrapContext);
-        return bean;
+        return (JiraConnectionFactory) mcf.createConnectionFactory();
     }
 
 }

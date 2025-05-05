@@ -1,12 +1,14 @@
 package com.blps.lab3.resourceAdapter;
 
 import jakarta.resource.cci.Record;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 
 @Setter
 @Getter
+@AllArgsConstructor
 public class JiraStatusUpdateRecord implements Record {
     private String issueId;
     private String status;

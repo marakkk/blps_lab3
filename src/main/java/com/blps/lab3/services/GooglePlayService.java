@@ -4,8 +4,12 @@ import com.blps.lab3.entities.googleplay.App;
 import com.blps.lab3.enums.AppStatus;
 import com.blps.lab3.repo.googleplay.AppRepository;
 import com.blps.lab3.resourceAdapter.JiraConnection;
+import com.blps.lab3.resourceAdapter.JiraRequestRecord;
+import com.blps.lab3.resourceAdapter.JiraResponseRecord;
+import com.blps.lab3.resourceAdapter.JiraStatusUpdateRecord;
 import jakarta.resource.ResourceException;
 import jakarta.resource.cci.ConnectionFactory;
+import jakarta.resource.spi.ManagedConnectionFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,24 +86,48 @@ public class GooglePlayService {
         }
 
         try (JiraConnection jiraConnection = (JiraConnection) jiraConnectionFactory.getConnection()) {
-            String issueId = jiraConnection.createManualReviewTask(app.getName(), app.getId());
-            jiraConnection.updateTaskStatus(issueId, "In Progress");
+            var response = (JiraResponseRecord) jiraConnection.createInteraction()
+                    .execute(null, new JiraRequestRecord(
+                            app.getName(),
+                            app.getId(),
+                            "createTask",
+                            "Create review task for app: " + app.getName()
+                    ));
 
-            mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), issueId);
+            jiraConnection.createInteraction()
+                    .execute(null, new JiraStatusUpdateRecord(
+                            response.getIssueId(),
+                            "In Progress",
+                            "updateStatus",
+                            "App is on review progress."
+                    ));
 
-            Map<String, String> response = new HashMap<>();
+            mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), response.getIssueId());
+
+            Map<String, String> responses = new HashMap<>();
             if (approved) {
                 app.setStatus(AppStatus.APPROVED);
-                jiraConnection.updateTaskStatus(issueId, "Done");
-                response.put("message", "App approved by moderator.");
+                jiraConnection.createInteraction()
+                        .execute(null, new JiraStatusUpdateRecord(
+                                response.getIssueId(),
+                                "Done",
+                                "updateStatus",
+                                "App approved by moderator"
+                        ));                responses.put("message", "App approved by moderator.");
             } else {
                 app.setStatus(AppStatus.REJECTED);
-                jiraConnection.updateTaskStatus(issueId, "Rejected");
-                response.put("reason", moderatorComment);
+                jiraConnection.createInteraction()
+                        .execute(null, new JiraStatusUpdateRecord(
+                                response.getIssueId(),
+                                "Rejected",
+                                "updateStatus",
+                                "Rejected with comment: " + moderatorComment
+                        ));
+                responses.put("reason", moderatorComment);
             }
 
             appRepository.save(app);
-            return response;
+            return responses;
         } catch (ResourceException e) {
             throw new RuntimeException("Failed to connect to Jira via JCA", e);
         }
