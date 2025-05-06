@@ -1,5 +1,7 @@
 package com.blps.lab2.services;
 
+import com.blps.lab2.async.PaymentMessage;
+import com.blps.lab2.async.StompMessageSender;
 import com.blps.lab2.entities.googleplay.App;
 import com.blps.lab2.entities.googleplay.AppUser;
 import com.blps.lab2.entities.payments.Payment;
@@ -24,6 +26,7 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final JmsTemplate jmsTemplate;
     private final Random random = new Random();
+    private final StompMessageSender stompMessageSender;
 
 
     public Payment payForApp(Long userId, Long appId) {
@@ -60,6 +63,12 @@ public class PaymentService {
 
     private Payment processPayment(AppUser user, App app, double amount, MonetizationType type) {
         Payment payment = new Payment();
+        payment.setUserId(user.getId());
+        payment.setDeveloperId(app.getDeveloper().getId());
+        payment.setAppId(app.getId());
+        payment.setAmount(amount);
+        payment.setMonetizationType(type);
+
 
         if (random.nextDouble() < 0.6) {
             payment.setStatus(PaymentStatus.FAILED);
@@ -83,12 +92,7 @@ public class PaymentService {
         app.getDeveloper().setEarnings(app.getDeveloper().getEarnings() + amount);
         appRepository.save(app);
 
-        payment.setDeveloperId(app.getDeveloper().getId());
-        payment.setAppId(app.getId());
-        payment.setAmount(amount);
-        payment.setMonetizationType(type);
         payment.setStatus(PaymentStatus.SUCCESS);
-
         return paymentRepository.save(payment);
     }
 
@@ -107,5 +111,6 @@ public class PaymentService {
 
         return "Payment process started for app: " + app.getName();
     }
+
 
 }

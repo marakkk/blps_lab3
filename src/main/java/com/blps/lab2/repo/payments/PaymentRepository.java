@@ -11,5 +11,5 @@ import java.util.List;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByAppId(Long appId);
 
-    boolean existsByAppIdAndUserIdAndStatus(Long appId, Long userId, PaymentStatus paymentStatus);
+    boolean existsByAppIdAndUserIdAndStatus(Long appId, Long userId, PaymentStatus status);
 }

@@ -1,6 +1,6 @@
 package com.blps.lab2.entities.payments;
 
-import com.blps.lab2.entities.googleplay.App;
+import com.blps.lab2.entities.googleplay.AppUser;
 import com.blps.lab2.entities.googleplay.Developer;
 import com.blps.lab2.enums.MonetizationType;
 import com.blps.lab2.enums.PaymentStatus;
@@ -24,4 +24,6 @@ public class Payment {
 
     private Long developerId;
     private Long appId;
+
+    private Long userId;
 }
