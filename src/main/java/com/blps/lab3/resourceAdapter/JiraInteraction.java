@@ -8,10 +8,10 @@ import jakarta.resource.cci.ResourceWarning;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -28,7 +28,6 @@ public class JiraInteraction implements Interaction {
     private final String defaultAssignee;
 
     private static final Logger logger = LoggerFactory.getLogger(JiraInteraction.class);
-
 
     public Record execute(Record input) throws ResourceException {
         if (input == null || input.getRecordName() == null) {
@@ -99,7 +98,6 @@ public class JiraInteraction implements Interaction {
         return response;
     }
 
-    //TODO: why is the response null
     private String createManualReviewTask(String appName, Long appId) {
         String endpoint = jiraUrl + "/rest/api/2/issue";
 
@@ -116,14 +114,15 @@ public class JiraInteraction implements Interaction {
         );
 
         try {
-            var response = restTemplate.exchange(
+            ResponseEntity<JiraRestIssueIdResponse> response = restTemplate.postForEntity(
                     endpoint,
-                    HttpMethod.POST,
                     request,
-                    new ParameterizedTypeReference<List<JiraRestIssueIdResponse>>() {}
+                    JiraRestIssueIdResponse.class
             );
-            logger.info("Response: {}", response.getBody());
-            return response.getBody().toString();
+
+            logger.info("Created jira task:{}", response.getBody().getId());
+
+            return response.getBody().getId();
         } catch (Exception e) {
             logger.error("Failed to create Jira issue", e);
             throw new RuntimeException("Failed to create Jira issue: " + e.getMessage(), e);
@@ -143,31 +142,52 @@ public class JiraInteraction implements Interaction {
         );
 
         try {
-            restTemplate.exchange(endpoint, HttpMethod.POST, request, String.class);
+            restTemplate.postForEntity(
+                    endpoint,
+                    request,
+                    Void.class
+            );
         } catch (Exception e) {
             throw new RuntimeException("Failed to update Jira issue status: " + e.getMessage(), e);
         }
     }
 
     private String getTransitionIdForStatus(String issueId, String status) {
-        List<JiraRestIssueIdResponse> transitions = getTransitionsForIssue(issueId);
-        return transitions.stream().filter(el -> el.getName().equals(status)).findFirst().get().getId();
+        List<JiraTransitionsResponse.Transition> transitions = getTransitionsForIssue(issueId);
+        return findTransitionIdByStatus(transitions, status);
     }
 
-    private List<JiraRestIssueIdResponse> getTransitionsForIssue(String issueId) {
+    private String findTransitionIdByStatus(List<JiraTransitionsResponse.Transition> transitions, String status) {
+        for (JiraTransitionsResponse.Transition transition : transitions) {
+            String transitionName = transition.getName();
+            logger.info("Transition found: {}", transitionName);
+            if (transitionName.equalsIgnoreCase(status)) {
+                return transition.getId();
+            }
+        }
+        return null;
+    }
+
+    private List<JiraTransitionsResponse.Transition> getTransitionsForIssue(String issueId) {
         String endpoint = jiraUrl + "/rest/api/2/issue/" + issueId + "/transitions";
         HttpEntity<String> request = new HttpEntity<>(authHeaders);
 
         try {
-            var response = restTemplate.exchange(
+            ResponseEntity<JiraTransitionsResponse> response = restTemplate.exchange(
                     endpoint,
                     HttpMethod.GET,
                     request,
-                    new ParameterizedTypeReference<List<JiraRestIssueIdResponse>>() {}
+                    JiraTransitionsResponse.class
             );
-            return response.getBody();
+
+            if (response.getBody() == null || response.getBody().getTransitions() == null) {
+                throw new RuntimeException("Invalid transitions response from JIRA");
+            }
+
+            return response.getBody().getTransitions();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get transitions for issue", e);
+            throw new RuntimeException("Failed to get transitions for issue: " + issueId, e);
         }
     }
+
 }

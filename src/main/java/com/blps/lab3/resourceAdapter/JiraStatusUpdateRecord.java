@@ -14,16 +14,7 @@ public class JiraStatusUpdateRecord implements Record {
     private String status;
     private String username;
     private String token;
-
-    @Override
-    public String getRecordName() {
-        return "";
-    }
-
-    @Override
-    public void setRecordName(String s) {
-
-    }
+    private String recordName;
 
     @Override
     public void setRecordShortDescription(String s) {

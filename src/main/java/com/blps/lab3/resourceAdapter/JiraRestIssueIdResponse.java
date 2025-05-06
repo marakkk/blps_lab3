@@ -1,11 +1,14 @@
 package com.blps.lab3.resourceAdapter;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@RequiredArgsConstructor
 @Getter
+@Setter
+@NoArgsConstructor
 public class JiraRestIssueIdResponse {
-    private final String id;
-    private final String name;
+    private String id;
+    private String name;
+
 }
