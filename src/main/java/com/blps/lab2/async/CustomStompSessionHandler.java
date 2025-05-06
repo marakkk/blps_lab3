@@ -36,6 +36,6 @@ public class CustomStompSessionHandler extends StompSessionHandlerAdapter {
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        // Optional: Handle incoming frames/messages
+
     }
 }

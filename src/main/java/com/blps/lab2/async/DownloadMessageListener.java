@@ -15,6 +15,7 @@ public class DownloadMessageListener {
     @JmsListener(destination = "app.download.queue")
     @Transactional(rollbackFor = Exception.class)
     public void handleDownloadMessage(DownloadMessage message) {
+       // Thread.sleep(5000);
         try {
             String result = appUserService.completePaidAppDownload(message.getUserId(), message.getAppId());
             stompMessageSender.send("/queue/app.download.success.queue",

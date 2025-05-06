@@ -32,7 +32,7 @@ public class PaymentProcessingService {
             ObjectMapper objectMapper = new ObjectMapper();
             String json = objectMapper.writeValueAsString(errorMessage);
 
-            stompMessageSender.send("/queue/app.payment.error.queue", json); // Send as String, not as object
+            stompMessageSender.send("/queue/app.payment.error.queue", json);
 
         }
 
