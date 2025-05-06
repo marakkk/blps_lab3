@@ -2,7 +2,6 @@ package com.blps.lab3.resourceAdapter;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.List;
 
 @Getter

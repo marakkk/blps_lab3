@@ -13,7 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +21,11 @@ import java.util.Map;
 public class JiraInteraction implements Interaction {
     private final JiraConnection connection;
     private final RestTemplate restTemplate;
-    private final HttpHeaders authHeaders;
+    private final HttpHeaders adminHeaders;
+    private final HttpHeaders moderatorHeaders;
     private final String jiraUrl;
     private final String jiraProjectKey;
-    private final String defaultAssignee;
+    private final String assignee;
 
     private static final Logger logger = LoggerFactory.getLogger(JiraInteraction.class);
 
@@ -106,11 +106,11 @@ public class JiraInteraction implements Interaction {
         fields.put("summary", "Manual review required for app: " + appName);
         fields.put("description", "App ID: " + appId + "\nRequires manual review.");
         fields.put("issuetype", Map.of("name", "Task"));
-        fields.put("assignee", Map.of("name", defaultAssignee));
+        fields.put("assignee", Map.of("name", assignee));
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(
                 Map.of("fields", fields),
-                authHeaders
+                adminHeaders
         );
 
         try {
@@ -130,47 +130,30 @@ public class JiraInteraction implements Interaction {
     }
 
     private void updateTaskStatus(String issueId, String status) {
-        String transitionId = getTransitionIdForStatus(issueId, status);
+        String transitionId = getTransitionIdForStatus(issueId, status, adminHeaders);
         if (transitionId == null) {
             throw new RuntimeException("No transition found for status: " + status);
         }
 
         String endpoint = jiraUrl + "/rest/api/2/issue/" + issueId + "/transitions";
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(
-                Map.of("transition", Map.of("id", transitionId)),
-                authHeaders
-        );
+        Map<String, Object> payload = Map.of("transition", Map.of("id", transitionId));
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, moderatorHeaders);
 
         try {
-            restTemplate.postForEntity(
-                    endpoint,
-                    request,
-                    Void.class
-            );
+            restTemplate.postForEntity(endpoint, request, Void.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update Jira issue status: " + e.getMessage(), e);
         }
     }
 
-    private String getTransitionIdForStatus(String issueId, String status) {
-        List<JiraTransitionsResponse.Transition> transitions = getTransitionsForIssue(issueId);
+    private String getTransitionIdForStatus(String issueId, String status, HttpHeaders headers) {
+        List<JiraTransitionsResponse.Transition> transitions = getTransitionsForIssue(issueId, headers);
         return findTransitionIdByStatus(transitions, status);
     }
 
-    private String findTransitionIdByStatus(List<JiraTransitionsResponse.Transition> transitions, String status) {
-        for (JiraTransitionsResponse.Transition transition : transitions) {
-            String transitionName = transition.getName();
-            logger.info("Transition found: {}", transitionName);
-            if (transitionName.equalsIgnoreCase(status)) {
-                return transition.getId();
-            }
-        }
-        return null;
-    }
-
-    private List<JiraTransitionsResponse.Transition> getTransitionsForIssue(String issueId) {
+    private List<JiraTransitionsResponse.Transition> getTransitionsForIssue(String issueId, HttpHeaders headers) {
         String endpoint = jiraUrl + "/rest/api/2/issue/" + issueId + "/transitions";
-        HttpEntity<String> request = new HttpEntity<>(authHeaders);
+        HttpEntity<String> request = new HttpEntity<>(headers);
 
         try {
             ResponseEntity<JiraTransitionsResponse> response = restTemplate.exchange(
@@ -188,6 +171,17 @@ public class JiraInteraction implements Interaction {
         } catch (Exception e) {
             throw new RuntimeException("Failed to get transitions for issue: " + issueId, e);
         }
+    }
+
+    private String findTransitionIdByStatus(List<JiraTransitionsResponse.Transition> transitions, String status) {
+        for (JiraTransitionsResponse.Transition transition : transitions) {
+            String transitionName = transition.getName();
+            logger.info("Transition found: {}", transitionName);
+            if (transitionName.equalsIgnoreCase(status)) {
+                return transition.getId();
+            }
+        }
+        return null;
     }
 
 }

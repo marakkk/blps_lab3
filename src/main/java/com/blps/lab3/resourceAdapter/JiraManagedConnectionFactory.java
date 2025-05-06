@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.security.auth.Subject;
 import java.io.PrintWriter;
 import java.util.Set;
@@ -21,10 +20,11 @@ import java.util.Set;
 public class JiraManagedConnectionFactory implements ManagedConnectionFactory {
 
     private String jiraUrl;
-    private String jiraUsername;
-    private String jiraApiToken;
+    private String username;
+    private String token;
     private String jiraProjectKey;
-    private String defaultAssignee;
+    private String assignee;
+    private String assigneePass;
 
     @Override
     public Object createConnectionFactory(ConnectionManager connectionManager) throws ResourceException {

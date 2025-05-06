@@ -4,7 +4,6 @@ import jakarta.resource.cci.Record;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Setter
 @Getter
 public class JiraResponseRecord implements Record {

@@ -6,10 +6,8 @@ import com.blps.lab3.repo.googleplay.AppRepository;
 import com.blps.lab3.resourceAdapter.*;
 import jakarta.resource.ResourceException;
 import jakarta.resource.cci.ConnectionFactory;
-import jakarta.resource.spi.ManagedConnectionFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -27,12 +25,6 @@ public class GooglePlayService {
     private ConnectionFactory jiraConnectionFactory;
 
     private final MailNotificationService mailNotificationService;
-
-    @Value("${jira.assignee}")
-    private String assignee;
-
-    @Value("${jira.assignee_pass}")
-    private String assigneePass;
 
     public Map<String, String> autoReviewApp(App app) {
 
@@ -95,8 +87,6 @@ public class GooglePlayService {
             interaction.execute(new JiraStatusUpdateRecord(
                             response.getIssueId(),
                             "In Progress",
-                            "moderator",
-                            "App is on review progress.",
                             "updateStatus"
                     ));
 
@@ -108,8 +98,6 @@ public class GooglePlayService {
                 interaction.execute(new JiraStatusUpdateRecord(
                                 response.getIssueId(),
                                 "Done",
-                                "moderator",
-                                "App approved by moderator",
                                 "updateStatus"
                         ));
                 responses.put("message", "App approved by moderator.");
@@ -118,8 +106,6 @@ public class GooglePlayService {
                 interaction.execute(new JiraStatusUpdateRecord(
                                 response.getIssueId(),
                                 "Rejected",
-                                "moderator",
-                                "Rejected with comment: " + moderatorComment,
                                 "updateStatus"
                         ));
                 responses.put("reason", moderatorComment);

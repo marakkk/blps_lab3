@@ -10,14 +10,15 @@ import org.springframework.web.client.RestTemplate;
 public class JiraConnection implements Connection, AutoCloseable {
 
     private final RestTemplate restTemplate;
-    private final HttpHeaders authHeaders;
+    private final HttpHeaders adminHeaders;
+    private final HttpHeaders moderatorHeaders;
     private final String jiraUrl;
     private final String jiraProjectKey;
-    private final String defaultAssignee;
+    private final String assignee;
 
     @Override
     public Interaction createInteraction() throws ResourceException {
-        return new JiraInteraction(this, restTemplate, authHeaders, jiraUrl, jiraProjectKey, defaultAssignee);
+        return new JiraInteraction(this, restTemplate, adminHeaders, moderatorHeaders, jiraUrl, jiraProjectKey, assignee);
     }
 
     @Override

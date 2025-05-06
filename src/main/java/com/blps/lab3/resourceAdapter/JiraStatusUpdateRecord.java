@@ -5,15 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Setter
 @Getter
 @AllArgsConstructor
 public class JiraStatusUpdateRecord implements Record {
     private String issueId;
     private String status;
-    private String username;
-    private String token;
     private String recordName;
 
     @Override

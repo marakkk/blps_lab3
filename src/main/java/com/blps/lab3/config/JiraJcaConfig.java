@@ -15,25 +15,29 @@ public class JiraJcaConfig {
     private String jiraUrl;
 
     @Value("${jira.username}")
-    private String jiraUsername;
+    private String username;
 
     @Value("${jira.token}")
-    private String jiraApiToken;
+    private String token;
 
     @Value("${jira.projectKey}")
     private String jiraProjectKey;
 
     @Value("${jira.assignee}")
-    private String defaultAssignee;
+    private String assignee;
+
+    @Value("${jira.assignee_pass}")
+    private String assigneePass;
 
     @Bean
     public ConnectionFactory jiraManagedConnectionFactory() throws ResourceException {
         JiraManagedConnectionFactory mcf = new JiraManagedConnectionFactory();
         mcf.setJiraUrl(jiraUrl);
-        mcf.setJiraUsername(jiraUsername);
-        mcf.setJiraApiToken(jiraApiToken);
+        mcf.setUsername(username);
+        mcf.setToken(token);
         mcf.setJiraProjectKey(jiraProjectKey);
-        mcf.setDefaultAssignee(defaultAssignee);
+        mcf.setAssignee(assignee);
+        mcf.setAssigneePass(assigneePass);
         return (JiraConnectionFactory) mcf.createConnectionFactory();
     }
 
