@@ -9,8 +9,7 @@ import lombok.Setter;
 public class JiraResponseRecord implements Record {
     private String issueId;
     private String status;
-//    private String issueKey;
-
+    private String issueKey;
 
     @Override
     public String getRecordName() {
