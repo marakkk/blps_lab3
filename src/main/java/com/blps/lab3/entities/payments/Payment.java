@@ -1,5 +1,9 @@
 package com.blps.lab3.entities.payments;
 
+import com.blps.lab3.entities.googleplay.AppUser;
+import com.blps.lab3.entities.googleplay.Developer;
+import com.blps.lab3.enums.MonetizationType;
+import com.blps.lab3.enums.PaymentStatus;
 import com.blps.lab3.enums.MonetizationType;
 import com.blps.lab3.enums.PaymentStatus;
 import jakarta.persistence.*;
@@ -28,4 +32,6 @@ public class Payment {
 
     private Long developerId;
     private Long appId;
+
+    private Long userId;
 }

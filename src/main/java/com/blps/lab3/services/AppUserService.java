@@ -41,35 +41,26 @@ public class AppUserService {
     }
 
     public String downloadApp(Long userId, Long appId) {
-        try {
-            userTransaction.begin();
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("App not found"));
 
-            AppUser user = userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            App app = appRepository.findById(appId)
-                    .orElseThrow(() -> new IllegalArgumentException("App not found"));
-
-            if (app.isNotFree()) {
-                Payment payment = paymentService.payForApp(userId, appId);
-                if (payment.getStatus() != PaymentStatus.SUCCESS) {
-                    userTransaction.rollback();
-                    return "Payment for app failed.";
-                }
+        if (app.isNotFree()) {
+            boolean hasSuccessfulPayment = paymentService.hasSuccessfulPayment(userId, appId);
+            if (!hasSuccessfulPayment) {
+                throw new IllegalArgumentException("Payment required before downloading this app");
             }
-
-            userTransaction.commit();
-            return "User " + user.getUsername() + " successfully downloaded " + app.getName() + ".";
-        } catch (Exception e) {
-            if (userTransaction != null) {
-                try {
-                    userTransaction.rollback();
-                } catch (Exception rollbackEx) {
-                    rollbackEx.printStackTrace();
-                }
-            }
-            throw new RuntimeException("Transaction failed: " + e.getMessage(), e);
         }
+
+
+        app.setDownloads(app.getDownloads() + 1);
+        appRepository.save(app);
+
+        return "User " + user.getUsername() + " successfully downloaded " + app.getName() +
+                ". Total downloads: " + app.getDownloads();
     }
+
 
     public String useApp(Long userId, Long appId) {
         try {
@@ -104,5 +95,24 @@ public class AppUserService {
             }
             throw new RuntimeException("Transaction failed: " + e.getMessage(), e);
         }
+    }
+
+
+
+
+    public String completePaidAppDownload(Long userId, Long appId) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        App app = appRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("App not found"));
+
+        if (!paymentService.hasSuccessfulPayment(userId, appId)) {
+            throw new IllegalStateException("Payment verification failed");
+        }
+
+        app.setDownloads(app.getDownloads() + 1);
+        appRepository.save(app);
+
+        return "Download completed. Total downloads: " + app.getDownloads();
     }
 }

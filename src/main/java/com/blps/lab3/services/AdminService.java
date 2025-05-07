@@ -20,7 +20,8 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
-public class AdminService {
+public class
+AdminService {
 
     private final AppRepository appRepository;
     private final PaymentRepository paymentRepository;
