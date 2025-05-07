@@ -78,6 +78,7 @@ public class JiraInteraction implements Interaction {
             JiraRestIssueIdResponse createdIssue = createManualReviewTask(input.getAppName(), input.getAppId());
             response.setIssueId(createdIssue.getId());
             response.setIssueKey(createdIssue.getKey());
+
             response.setStatus("CREATED");
         } catch (Exception e) {
             logger.error("Failed to create task", e);

@@ -39,7 +39,6 @@ class DeveloperController {
         }
     }
 
-
     @PreAuthorize("hasRole('DEVELOPER') and hasAuthority('APP_PUBLISH')")
     @PostMapping("/{developerId}/apps/{appId}/publish")
     public ResponseEntity<Map<String, String>> publishApp(@PathVariable Long developerId,
@@ -62,7 +61,6 @@ class DeveloperController {
     public Map<String, Object> updateAnalytics(@PathVariable Long id) {
         return appService.updateAnalytics(id);
     }
-
 
     @PreAuthorize("hasRole('DEVELOPER') and hasAuthority('APP_INFO')")
     @GetMapping("/{appId}/app-info")
