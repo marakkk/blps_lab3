@@ -75,8 +75,9 @@ public class JiraInteraction implements Interaction {
     private JiraResponseRecord handleCreateTask(JiraRequestRecord input) {
         JiraResponseRecord response = new JiraResponseRecord();
         try {
-            String issueId = createManualReviewTask(input.getAppName(), input.getAppId());
-            response.setIssueId(issueId);
+            JiraRestIssueIdResponse createdIssue = createManualReviewTask(input.getAppName(), input.getAppId());
+            response.setIssueId(createdIssue.getId());
+            response.setIssueKey(createdIssue.getKey());
             response.setStatus("CREATED");
         } catch (Exception e) {
             logger.error("Failed to create task", e);
@@ -84,6 +85,7 @@ public class JiraInteraction implements Interaction {
         }
         return response;
     }
+
 
     private JiraResponseRecord handleUpdateTaskStatus(JiraStatusUpdateRecord input) {
         JiraResponseRecord response = new JiraResponseRecord();
@@ -98,7 +100,7 @@ public class JiraInteraction implements Interaction {
         return response;
     }
 
-    private String createManualReviewTask(String appName, Long appId) {
+    private JiraRestIssueIdResponse createManualReviewTask(String appName, Long appId) {
         String endpoint = jiraUrl + "/rest/api/2/issue";
 
         Map<String, Object> fields = new HashMap<>();
@@ -120,9 +122,13 @@ public class JiraInteraction implements Interaction {
                     JiraRestIssueIdResponse.class
             );
 
-            logger.info("Created jira task:{}", response.getBody().getId());
+            JiraRestIssueIdResponse body = response.getBody();
+            if (body == null || body.getKey() == null) {
+                throw new RuntimeException("Invalid response from Jira");
+            }
 
-            return response.getBody().getId();
+            logger.info("Created jira task: {} with key: {}", body.getId(), body.getKey());
+            return body;
         } catch (Exception e) {
             logger.error("Failed to create Jira issue", e);
             throw new RuntimeException("Failed to create Jira issue: " + e.getMessage(), e);

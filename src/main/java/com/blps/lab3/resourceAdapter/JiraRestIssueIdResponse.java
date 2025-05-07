@@ -10,5 +10,5 @@ import lombok.Setter;
 public class JiraRestIssueIdResponse {
     private String id;
     private String name;
-
+    private String key;
 }

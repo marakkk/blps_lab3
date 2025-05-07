@@ -90,7 +90,7 @@ public class GooglePlayService {
                             "updateStatus"
                     ));
 
-            mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), response.getIssueId());
+            mailNotificationService.notifyModeratorOfNewTask(app.getName(), app.getId(), response.getIssueKey());
 
             Map<String, String> responses = new HashMap<>();
             if (approved) {
