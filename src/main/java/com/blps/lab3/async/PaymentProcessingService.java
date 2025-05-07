@@ -1,12 +1,11 @@
-package com.blps.lab2.async;
+package com.blps.lab3.async;
 
-import com.blps.lab2.entities.payments.Payment;
-import com.blps.lab2.enums.PaymentStatus;
-import com.blps.lab2.services.AppUserService;
-import com.blps.lab2.services.PaymentService;
+import com.blps.lab3.entities.payments.Payment;
+import com.blps.lab3.enums.PaymentStatus;
+import com.blps.lab3.services.AppUserService;
+import com.blps.lab3.services.PaymentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jms.annotation.JmsListener;

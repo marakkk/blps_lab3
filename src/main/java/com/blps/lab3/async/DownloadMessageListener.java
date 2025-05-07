@@ -1,6 +1,6 @@
-package com.blps.lab2.async;
+package com.blps.lab3.async;
 
-import com.blps.lab2.services.AppUserService;
+import com.blps.lab3.services.AppUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jms.annotation.JmsListener;

@@ -1,11 +1,8 @@
 package com.blps.lab3.controllers;
 
 import com.blps.lab3.dto.AppDto;
-import com.blps.lab3.entities.payments.Payment;
 import com.blps.lab3.services.AppUserService;
 import com.blps.lab3.services.PaymentService;
-import com.blps.lab3.dto.AppDto;
-import com.blps.lab3.services.AppUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +38,6 @@ public class AppUserController {
         String result = appUserService.useApp(userId, appId);
         return ResponseEntity.ok(result);
     }
-
 
     @PreAuthorize("hasRole('USER') and hasAuthority('APP_PURCHASE')")
     @PostMapping("/{userId}/purchase/{appId}")

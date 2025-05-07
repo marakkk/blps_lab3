@@ -1,6 +1,6 @@
 package com.blps.lab3.config;
 
-import com.blps.lab2.async.CustomStompSessionHandler;
+import com.blps.lab3.async.CustomStompSessionHandler;
 import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -24,7 +24,6 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
-import java.util.Collections;
 import java.util.List;
 
 @Configuration

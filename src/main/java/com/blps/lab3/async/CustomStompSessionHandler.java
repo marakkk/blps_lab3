@@ -1,4 +1,4 @@
-package com.blps.lab2.async;
+package com.blps.lab3.async;
 
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;

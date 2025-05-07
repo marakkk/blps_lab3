@@ -61,7 +61,6 @@ public class AppUserService {
                 ". Total downloads: " + app.getDownloads();
     }
 
-
     public String useApp(Long userId, Long appId) {
         try {
             userTransaction.begin();
@@ -96,9 +95,6 @@ public class AppUserService {
             throw new RuntimeException("Transaction failed: " + e.getMessage(), e);
         }
     }
-
-
-
 
     public String completePaidAppDownload(Long userId, Long appId) {
         AppUser user = userRepository.findById(userId)

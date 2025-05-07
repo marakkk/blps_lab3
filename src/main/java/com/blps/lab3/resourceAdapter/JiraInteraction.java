@@ -77,6 +77,7 @@ public class JiraInteraction implements Interaction {
         try {
             String issueId = createManualReviewTask(input.getAppName(), input.getAppId());
             response.setIssueId(issueId);
+//            response.setIssueKey(response.getIssueKey());
             response.setStatus("CREATED");
         } catch (Exception e) {
             logger.error("Failed to create task", e);
@@ -98,7 +99,7 @@ public class JiraInteraction implements Interaction {
         return response;
     }
 
-    private String createManualReviewTask(String appName, Long appId) {
+    private String createManualReviewTask(String appName, Long appId){
         String endpoint = jiraUrl + "/rest/api/2/issue";
 
         Map<String, Object> fields = new HashMap<>();

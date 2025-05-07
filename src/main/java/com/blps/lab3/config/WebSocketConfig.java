@@ -1,4 +1,4 @@
-package com.blps.lab2.config;
+package com.blps.lab3.config;
 
 
 import org.springframework.context.annotation.Configuration;
