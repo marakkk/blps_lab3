@@ -2,6 +2,7 @@ package com.blps.lab2.async;
 
 import com.blps.lab2.services.AppUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ public class DownloadMessageListener {
     private final AppUserService appUserService;
     private final StompMessageSender stompMessageSender;
 
+    @Profile("node2")
     @JmsListener(destination = "app.download.queue")
     @Transactional(rollbackFor = Exception.class)
     public void handleDownloadMessage(DownloadMessage message) {

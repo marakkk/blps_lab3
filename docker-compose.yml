@@ -1,0 +1,97 @@
+
+services:
+  activemq:
+    image: apache/activemq-classic:5.19.0
+    container_name: activemq
+    ports:
+      - "61617:61616"  #  JMS port
+      - "8162:8161"    #  web console
+      - "61618:61613"  #  STOMP
+      - "61619:61614"  #  WebSocket
+    environment:
+      - ACTIVEMQ_ADMIN_LOGIN=admin
+      - ACTIVEMQ_ADMIN_PASSWORD=admin
+      - ACTIVEMQ_STOMP_USER=admin
+      - ACTIVEMQ_STOMP_PASSWORD=admin
+    # healthcheck:
+    #   test: ["CMD", "nc", "-z", "localhost", "61616"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 10
+
+
+  postgres-googleplay:
+    image: postgres:13
+    container_name: postgres-googleplay
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: googleplay_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_googleplay_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d googleplay_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-payments:
+    image: postgres:13
+    container_name: postgres-payments
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: payments_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_payments_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d payments_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app-node1:
+    build:
+      context: .
+    container_name: app-node1
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=node1
+      - SERVER_PORT=8080
+      - SPRING_ACTIVEMQ_BROKER_URL=tcp://activemq:61616
+      - STOMP_ENDPOINT=ws://activemq:61614/ws
+    depends_on:
+      activemq:
+        condition: service_healthy
+      postgres-googleplay:
+        condition: service_healthy
+      postgres-payments:
+        condition: service_healthy
+
+  app-node2:
+    build:
+      context: .
+    container_name: app-node2
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=node2
+      - SERVER_PORT=8080
+      - SPRING_ACTIVEMQ_BROKER_URL=tcp://activemq:61616
+      - STOMP_ENDPOINT=ws://activemq:61614/ws
+    depends_on:
+      activemq:
+        condition: service_healthy
+      postgres-googleplay:
+        condition: service_healthy
+      postgres-payments:
+        condition: service_healthy
+
+volumes:
+  pg_googleplay_data:
+  pg_payments_data:

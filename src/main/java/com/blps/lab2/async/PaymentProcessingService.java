@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class PaymentProcessingService {
     private final JmsTemplate jmsTemplate;
     private final StompMessageSender stompMessageSender;
 
+    @Profile("node1")
     @JmsListener(destination = "app.payment.queue")
     public void processPayment(PaymentMessage message) throws JsonProcessingException {
         try {
